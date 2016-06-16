@@ -7,18 +7,24 @@ var uuid          = require('uuid'),
     entities      = require('./entities'),
     Player        = entities.player;
 
-var numberOfRooms = Math.round(Math.random() * 50);
-var rooms = roomGenerator(numberOfRooms);
-var connections = {};
+var numberOfRooms = Math.round(Math.random() * 50),
+    rooms         = roomGenerator(numberOfRooms),
+    connections   = {};
 
 io.on('connection', function(socket) {
-    var playerId = uuid.v4();
+    var playerId          = uuid.v4(),
+        connectionContext = {
+            playerId: playerId,
+            userName: 'A player',
+            rooms   : this.rooms
+        };
+
     connections[playerId] = socket;
     connection = connections[playerId];
 
     connection.on('send', function(data) {
         io.emit('message', data);
-    });
+    }.bind(connectionContext));
     connection.on('playerEnter', function(data) {
         var rooms = this.rooms;
         this.userName = data.userName;
@@ -30,11 +36,11 @@ io.on('connection', function(socket) {
         rooms[randomRoomName].players[player.id] = player;
 
         connection.emit('enterRoom', rooms[randomRoomName]);
-    }.bind(this))
-    socket.on('disconnect', function() {
+    }.bind(connectionContext));
+    connection.on('disconnect', function() {
         io.emit('message', {
             type   : 'notice',
             message: this.userName + ' has left the game.'
         });
-    }.bind(this));
+    }.bind(connectionContext));
 }.bind({rooms}));
