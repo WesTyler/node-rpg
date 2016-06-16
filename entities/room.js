@@ -38,16 +38,17 @@ function generateEnemies(enemyProbability) {
 };
 
 var Room = function(name) {
-    this.name    = name;
-    this.exits   = {
+    this.name        = name;
+    this.exits       = {
         N: {},
         S: {},
         E: {},
         W: {}
     };
-    this.players = {};
-    this.enemies = generateEnemies(Math.random());
-    this.items   = generateItems(Math.random());
+    this.players     = {};
+    this.enemies     = generateEnemies(Math.random());
+    this.items       = generateItems(Math.random());
+    this.description = 'A nondescript room lies before you.'
 };
 
 module.exports = Room;

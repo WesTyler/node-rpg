@@ -1,7 +1,8 @@
 'use strict';
 
-var uuid = require('uuid'),
-    entities = require('./entities');
+var uuid     = require('uuid'),
+    entities = require('./entities'),
+    helpers  = require('./helpers');
 
 var Room  = entities.room;
 
@@ -17,18 +18,6 @@ function randomExit(availableExits) {
     return availableExits[Math.floor(Math.random() *  availableExits.length)]
 };
 
-function randomIntegerBetween(min, max) {
-    // Range is inclusive of both min, max
-    if (!max) {
-        var max = min;
-        min = 0;
-    }
-
-    var int = Math.round(Math.random() * max);
-
-    return int < min ? max : int;
-}
-
 module.exports = function(numberNeeded) {
     for (var i=0; i <= numberNeeded; i++) {
         var connected = false,
@@ -36,7 +25,7 @@ module.exports = function(numberNeeded) {
 
         if (i > 0) {
             while (!connected) {
-                var roomToConnect = 'Room ' + randomIntegerBetween(i - 1);
+                var roomToConnect = 'Room ' + helpers.randomIntegerBetween(i - 1);
 
                 var exitsAvailable = Object.keys(rooms[roomToConnect].exits).filter(function(otherRoomExitDirection) {
                     var canBeConnected = rooms[roomToConnect].exits[otherRoomExitDirection].connectedRoom === undefined;
@@ -63,7 +52,7 @@ module.exports = function(numberNeeded) {
                         });
 
                         if (exitsStillAvailable.length) {
-                            var exitToBlock = exitsStillAvailable[randomIntegerBetween(1, exitsStillAvailable.length) - 1];
+                            var exitToBlock = exitsStillAvailable[helpers.randomIntegerBetween(1, exitsStillAvailable.length) - 1];
                             newRoom.exits[exitToBlock].connectedRoom = null;
                         }
                     } else if (exitModificationChance < 0.001) {
@@ -74,7 +63,7 @@ module.exports = function(numberNeeded) {
                         });
 
                         if (exitsConnected.length) {
-                            var exitToHide = exitsConnected[randomIntegerBetween(1, exitsConnected.length) - 1];
+                            var exitToHide = exitsConnected[helpers.randomIntegerBetween(1, exitsConnected.length) - 1];
                             newRoom.exits[exitToHide].hidden = true;
                         }
                     }

@@ -18,12 +18,18 @@ function display(msg) {
     rlInterface.prompt(true);
 }
 
-rlInterface.question('Please enter your name: ', function(name) {
-    var msg = name + ' has joined the game.';
+connection.on('connect', function() {
+    rlInterface.question('Please enter your name: ', function(name) {
+        var msg = name + ' has joined the game.';
 
-    userName = name;
-    connection.emit('send', { type: 'notice', message: msg });
-    rlInterface.prompt(true);
+        userName = name;
+        connection.emit('send', {
+            type   : 'notice',
+            message: msg
+        });
+        connection.emit('playerEnter', {userName});
+        rlInterface.prompt(true);
+    });
 });
 
 rlInterface.on('line', function(line) {
@@ -33,20 +39,33 @@ rlInterface.on('line', function(line) {
     rlInterface.prompt(true);
 });
 
+connection.on('enterRoom', function(roomData) {
+    display(color(roomData.description, 'bold+blue'));
+    if (Object.keys(roomData.players).length === 1) {
+        display(color('You\'re the only one here.', 'blue'));
+    }
+});
+
 connection.on('message', function (data) {
     var leader;
     if (data.type == 'chat' && data.name != userName) {
-        leader = color("<"+data.name+"> ", "green");
+        leader = color('<'+data.name+'> ', 'green');
         display(leader + data.message);
     }
-    else if (data.type == "notice") {
+    else if (data.type == 'notice') {
         display(color(data.message, 'cyan'));
     }
-    else if (data.type == "tell" && data.to == nick) {
-        leader = color("["+data.from+"->"+data.to+"]", "red");
+    else if (data.type == 'tell' && data.to == nick) {
+        leader = color('['+data.from+'->'+data.to+']', 'red');
         display(leader + data.message);
     }
-    else if (data.type == "emote") {
-        display(color(data.message, "cyan"));
+    else if (data.type == 'emote') {
+        display(color(data.message, 'cyan'));
     }
+});
+
+connection.on('disconnect', function() {
+    display(color('UH OH! You\'ve been disconnected...', 'red'));
+    rlInterface.close();
+    process.exit(0);
 });
