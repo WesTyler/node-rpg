@@ -1,0 +1,29 @@
+{
+  "name": "node-rpg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WesTyler/node-rpg.git"
+  },
+  "keywords": [
+    "game",
+    "rpg"
+  ],
+  "author": "Wes Tyler (westyler5@gmail.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WesTyler/node-rpg/issues"
+  },
+  "homepage": "https://github.com/WesTyler/node-rpg#readme",
+  "dependencies": {
+    "ansi-color": "^0.2.1",
+    "socket.io": "^1.4.6",
+    "socket.io-client": "^1.4.6",
+    "uuid": "^2.0.2"
+  }
+}
