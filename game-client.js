@@ -48,7 +48,7 @@ connection.on('enterRoom', function(roomData) {
 
 connection.on('message', function (data) {
     var leader;
-    if (data.type == 'chat' && data.name != userName) {
+    if (data.type == 'chat' && data.name) {
         leader = color('<'+data.name+'> ', 'green');
         display(leader + data.message);
     }
