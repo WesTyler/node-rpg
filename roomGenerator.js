@@ -1,6 +1,9 @@
 'use strict';
 
-var uuid = require('uuid');
+var uuid = require('uuid'),
+    entities = require('./entities');
+
+var Room  = entities.room;
 
 var antiCompass = {
         N: 'S',
@@ -26,49 +29,10 @@ function randomIntegerBetween(min, max) {
     return int < min ? max : int;
 }
 
-function generateEnemies(room, enemyProbability) {
-    if (enemyProbability < 0.1) {
-        var newEnemy = {
-                id: uuid.v4(),
-                items: {}
-            },
-            itemChance = Math.random();
-
-        generateItems(newEnemy, itemChance);
-        room.enemies[newEnemy.id] = newEnemy;
-    }
-};
-
-function generateItems(entity, itemProbability) {
-    if (itemProbability < 0.1) {
-        var newItem = {
-            id: uuid.v4()
-        };
-
-        entity.items[newItem.id] = newItem;
-    }
-};
-
 module.exports = function(numberNeeded) {
     for (var i=0; i <= numberNeeded; i++) {
-        var connected        = false,
-            newRoom          = {
-            name: 'Room ' + i.toString(),
-            exits: {
-                N: {},
-                S: {},
-                E: {},
-                W: {}
-            },
-            players: {},
-            enemies: {},
-            items: {}
-            },
-            enemyProbability = Math.random(),
-            itemProbability  = Math.random();
-
-        generateEnemies(newRoom, enemyProbability);
-        generateItems(newRoom, itemProbability);
+        var connected = false,
+            newRoom   = new Room('Room ' + i.toString());
 
         if (i > 0) {
             while (!connected) {
@@ -99,7 +63,7 @@ module.exports = function(numberNeeded) {
                         });
 
                         if (exitsStillAvailable.length) {
-                            var exitToBlock = exitsStillAvailable[randomIntegerBetween(1, exitsAvailable.length) - 1];
+                            var exitToBlock = exitsStillAvailable[randomIntegerBetween(1, exitsStillAvailable.length) - 1];
                             newRoom.exits[exitToBlock].connectedRoom = null;
                         }
                     } else if (exitModificationChance < 0.001) {

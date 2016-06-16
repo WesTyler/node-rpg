@@ -7,8 +7,6 @@ var numberOfRooms = Math.round(Math.random() * 50);
 var rooms = roomGenerator(numberOfRooms);
 console.log('Will have', numberOfRooms + 1, 'rooms this game.');
 
-
-
 console.log(JSON.stringify(rooms, null, 4))
 
 io.on('connection', function (socket) {
