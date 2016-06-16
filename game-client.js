@@ -8,18 +8,25 @@ var io       = require('socket.io-client'),
 var serverUrl = 'http://localhost:8000/';
 
 var connection  = io.connect(serverUrl),
-    rlInterface = readline.createInterface(process.stdin, process.stdout),
+    userInput = readline.createInterface(process.stdin, process.stdout),
     userName;
 
 function display(msg) {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
     console.log(msg);
-    rlInterface.prompt(true);
+    userInput.prompt(true);
 }
 
+userInput.on('line', function(line) {
+    var data = { type: 'chat', message: line, name: userName };
+
+    connection.emit('send', data);
+    userInput.prompt(true);
+});
+
 connection.on('connect', function() {
-    rlInterface.question('Please enter your name: ', function(name) {
+    userInput.question('Please enter your name: ', function(name) {
         var msg = name + ' has joined the game.';
 
         userName = name;
@@ -28,15 +35,8 @@ connection.on('connect', function() {
             message: msg
         });
         connection.emit('playerEnter', {userName});
-        rlInterface.prompt(true);
+        userInput.prompt(true);
     });
-});
-
-rlInterface.on('line', function(line) {
-    var data = { type: 'chat', message: line, name: userName };
-
-    connection.emit('send', data);
-    rlInterface.prompt(true);
 });
 
 connection.on('enterRoom', function(roomData) {
@@ -66,6 +66,6 @@ connection.on('message', function (data) {
 
 connection.on('disconnect', function() {
     display(color('UH OH! You\'ve been disconnected...', 'red'));
-    rlInterface.close();
+    userInput.close();
     process.exit(0);
 });
