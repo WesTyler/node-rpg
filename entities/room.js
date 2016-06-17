@@ -48,7 +48,7 @@ var Room = function(name) {
     this.players     = {};
     this.enemies     = generateEnemies(Math.random());
     this.items       = generateItems(Math.random());
-    this.description = 'A nondescript room lies before you.'
+    this.description = this.name + ': A nondescript room lies before you.'
 };
 
 module.exports = Room;

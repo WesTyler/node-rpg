@@ -6,13 +6,7 @@ var uuid     = require('uuid'),
 
 var Room  = entities.room;
 
-var antiCompass = {
-        N: 'S',
-        E: 'W',
-        S: 'N',
-        W: 'E'
-    },
-    rooms = {};
+var rooms = {};
 
 function randomExit(availableExits) {
     return availableExits[Math.floor(Math.random() *  availableExits.length)]
@@ -39,7 +33,7 @@ module.exports = function(numberNeeded) {
                         exitModificationChance = Math.random();
 
                     rooms[roomToConnect].exits[directionToConnect].connectedRoom = newRoom.name;
-                    newRoom.exits[antiCompass[directionToConnect]].connectedRoom = roomToConnect;
+                    newRoom.exits[helpers.antiCompass[directionToConnect]].connectedRoom = roomToConnect;
 
                     rooms[newRoom.name] = newRoom;
                     connected = true;

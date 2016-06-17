@@ -1,5 +1,6 @@
 'use strict';
 
 module.exports = {
-    randomIntegerBetween: require('./randomIntegerBetween')
+    randomIntegerBetween: require('./randomIntegerBetween'),
+    antiCompass         : require('./antiCompass')
 };
