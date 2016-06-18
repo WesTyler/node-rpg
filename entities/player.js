@@ -31,13 +31,12 @@ Player.prototype.move = function (direction, rooms) {
     if (success) {
         return {
             success: {
-                to  : {
-                    userName : this.userName,
+                userName: this.userName,
+                to      : {
                     direction: helpers.antiCompass[direction],
                     room     : nextRoomName
                 },
-                from: {
-                    userName : this.userName,
+                from    : {
                     direction: direction,
                     room     : originRoomName
                 }

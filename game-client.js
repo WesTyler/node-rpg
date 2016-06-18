@@ -16,7 +16,72 @@ function move(direction) {
         type: 'move',
         direction: direction
     })
-}
+};
+
+function look() {
+    connection.emit('action', {
+        type: 'look'
+    });
+};
+
+function displayExits(exits) {
+    var visibleExits = Object.keys(exits).filter(exitDirection => {
+        return !!exits[exitDirection].connectedRoom;
+    });
+
+    display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
+};
+
+function displayPlayers(players) {
+    var playerIds    = Object.keys(players),
+        otherPlayerNames = [];
+
+    playerIds.forEach(playerId => {
+        if (players[playerId].userName !== userName) {
+            otherPlayerNames.push(players[playerId].userName);
+        }
+    });
+
+    if (playerIds.length === 1) {
+        display(color('You\'re the only one here.', 'blue'));
+    } else {
+        display(color('You see ' + otherPlayerNames.join(',') + ' already here.'));
+    }
+};
+
+function displayItems(items) {
+    var itemIds          = Object.keys(items),
+        itemDescriptions = [];
+
+    itemIds.map(id => {
+        itemDescriptions.push(items[id].title);
+    });
+
+    if (itemIds.length === 1) {
+        display('A ' + itemDescriptions[0] + ' is on the ground.');
+    } else if (itemIds.length === 2) {
+        display('A ' + itemDescriptions[0] + ' and a ' + itemDescriptions[1] + ' are on the ground.');
+    } else if (itemIds.length > 2) {
+        display('A ' + itemDescriptions.slice(0, -1).join(', ') + ', and a' + itemDescriptions.slice(-1) + ' are on the ground.');
+    }
+};
+
+function displayEnemies(enemies) {
+    var enemyIds          = Object.keys(enemies),
+        enemyDescriptions = [];
+
+    enemyIds.forEach(id => {
+        enemyDescriptions.push(enemies[id].title);
+    });
+
+    if (enemyIds.length === 1) {
+        display('A ' + enemyDescriptions[0] + ' is lurking here.');
+    } else if (enemyIds.length === 2) {
+        display('A ' + enemyDescriptions[0] + ' and a ' + enemyDescriptions[1] + ' are staring at you.');
+    } else if (enemyIds.length > 2) {
+        display('A ' + enemyDescriptions.slice(0, -1).join(', ') + ', and a' + enemyDescriptions.slice(-1) + ' are congregated here.');
+    }
+};
 
 var commands = {
     '/shout': function(message) {
@@ -34,10 +99,11 @@ var commands = {
 };
 
 var actions = {
-    'N': move,
-    'S': move,
-    'E': move,
-    'W': move
+    'N'   : move,
+    'S'   : move,
+    'E'   : move,
+    'W'   : move,
+    'look': look
 };
 
 function display(msg) {
@@ -67,36 +133,41 @@ connection.on('connect', function() {
             type   : 'notice',
             message: msg
         });
-        connection.emit('playerEnter', {userName});
+        connection.emit('playerJoin', {userName});
         userInput.prompt(true);
     });
 });
 
 connection.on('enterRoom', function(roomData) {
     display(color(roomData.description, 'bold+blue'));
-    if (Object.keys(roomData.players).length === 1) {
-        display(color('You\'re the only one here.', 'blue'));
-    }
+
+    displayExits(roomData.exits);
+    displayPlayers(roomData.players);
+    displayItems(roomData.items);
+    displayEnemies(roomData.enemies);
 });
 
 connection.on('roomAction', function(roomData) {
     if (roomData.userName === userName) {
-        if (roomData.room) {
-            var entryMessage;
-
-            display(color(entryMessage, 'yellow'))
-        } else {
+        if (roomData.failure) {
             display(color(roomData.reason, 'yellow'));
         }
     } else {
-        if (roomData.room) {
-            var entryMessage;
-
+        if (roomData.userName) {
+            var entryMessage = roomData.userName + ' has ' + roomData.action + ' the room.';
             display(color(entryMessage, 'yellow'))
         } else {
             display(color(roomData.userName + ' can\'t leave! ' + roomData.reason, 'yellow'));
         }
     }
+});
+
+connection.on('lookData', function(exits) {
+    var visibleExits = Object.keys(exits).filter(exitDirection => {
+        return !!exits[exitDirection].connectedRoom;
+    });
+
+    display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
 });
 
 connection.on('message', function (data) {

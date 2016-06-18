@@ -7,7 +7,7 @@ var uuid          = require('uuid'),
     entities      = require('./entities'),
     Player        = entities.player;
 
-var numberOfRooms = Math.round(Math.random() * 50),
+var numberOfRooms = Math.round(Math.random() * 10),
     rooms         = roomGenerator(numberOfRooms),
     compass       = {'N': 'N', 'S': 'S', 'E': 'E', 'W': 'W'},
     connections   = {};
@@ -22,9 +22,8 @@ io.on('connection', function(socket) {
         };
 
     connections[playerId] = socket;
-    connection = connections[playerId];
 
-    connection.on('send', function(data) {
+    connections[playerId].on('send', function(data) {
         if (data.type === 'chat' || data.type === 'notice') {
             io.emit('message', data);
         } else if (data.type === 'localChat') {
@@ -32,25 +31,37 @@ io.on('connection', function(socket) {
         }
     }.bind(connectionContext));
 
-    connection.on('action', function(data) {
-        console.log(this.player.userName, 'submitted an action.');
-        if (data.type === 'move' && compass[data.direction]) {
+    connections[playerId].on('action', function(data) {
+        if (data.type === 'move') {
             var movement = this.player.move(data.direction, rooms);
-            //console.log('movement result:\n', JSON.stringify(movement, null, 4));
             if (movement.success) {
-                connection.join(movement.success.to.room);
-                connection.leave(movement.success.from.room);
+                var toData   = {
+                        userName: this.player.userName,
+                        action  : 'entered'
+                    },
+                    fromData = {
+                        userName: this.player.userName,
+                        action  : 'left'
+                    };
 
-                io.in(movement.success.from.room).emit('roomAction', movement.success.to);
-                io.in(movement.success.to.room).emit('roomAction', movement.success.from);
-                connection.emit('enterRoom', rooms[movement.success.to.room]);
+                connections[playerId].join(movement.success.to.room);
+                connections[playerId].leave(movement.success.from.room);
+                this.rooms[movement.success.to.room].players[this.player.id] = this.player;
+
+                delete this.rooms[movement.success.from.room].players[this.player.id];
+
+                io.in(movement.success.from.room).emit('roomAction', fromData);
+                io.in(movement.success.to.room).emit('roomAction', toData);
+                connections[playerId].emit('enterRoom', rooms[movement.success.to.room]);
             } else {
                 io.in(this.player.currentRoom).emit('roomAction', movement.failure);
             }
+        } else if (data.type === 'look') {
+            connections[playerId].emit('lookData', this.rooms[this.player.currentRoom].exits);
         }
     }.bind(connectionContext));
 
-    connection.on('playerEnter', function(data) {
+    connections[playerId].on('playerJoin', function(data) {
         var rooms = this.rooms;
         this.player.userName = data.userName;
         var roomNames = Object.keys(rooms);
@@ -60,13 +71,12 @@ io.on('connection', function(socket) {
         var player = this.player;
         rooms[randomRoomName].players[player.id] = player;
         player.currentRoom = randomRoomName;
-        console.log('Entered', randomRoomName)
 
-        connection.emit('enterRoom', rooms[randomRoomName]);
-        connection.join(randomRoomName);
+        connections[playerId].emit('enterRoom', rooms[randomRoomName]);
+        connections[playerId].join(randomRoomName);
     }.bind(connectionContext));
 
-    connection.on('disconnect', function() {
+    connections[playerId].on('disconnect', function() {
         io.emit('message', {
             type   : 'notice',
             message: this.player.userName + ' has left the game.'
