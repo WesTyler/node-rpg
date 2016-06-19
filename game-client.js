@@ -95,13 +95,13 @@ function displayEnemies(enemies) {
 
 var commands = {
     '/shout': function(message) {
-        var data = { type: 'chat', message: message, name: userName };
+        var data = { type: 'chat', message: message, name: userInfo.userName };
 
         connection.emit('send', data);
         userInput.prompt(true);
     },
     '/say': function(message) {
-        var data = { type: 'localChat', message: message, name: userName };
+        var data = { type: 'localChat', message: message, name: userInfo.userName };
 
         connection.emit('send', data);
         userInput.prompt(true);

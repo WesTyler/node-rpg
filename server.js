@@ -100,6 +100,8 @@ io.on('connection', function(socket) {
     }.bind(connectionContext));
 
     connections[playerId].on('disconnect', function() {
+        delete rooms[this.player.currentRoom].players[this.player.id];
+
         io.emit('message', {
             type   : 'notice',
             message: this.player.userName + ' has left the game.'
