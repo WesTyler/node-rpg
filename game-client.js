@@ -7,29 +7,32 @@ var io       = require('socket.io-client'),
 
 var serverUrl = 'http://localhost:8000/';
 
-var connection  = io.connect(serverUrl),
-    userInput = readline.createInterface(process.stdin, process.stdout),
-    userName;
+var userInput  = readline.createInterface(process.stdin, process.stdout),
+    userInfo,
+    connection;
+
+// TO DO:
+// userInput.setPrompt('Room [hp: 5 mp: 5 move: 10] > ');
 
 function move(direction) {
     connection.emit('action', {
         type: 'move',
         direction: direction
     })
-};
+}
 
 function look() {
     connection.emit('action', {
         type: 'look'
     });
-};
+}
 
 function get(itemTitle) {
     connection.emit('action', {
         type     : 'get',
         itemTitle: itemTitle
     });
-};
+}
 
 function displayExits(exits) {
     var visibleExits = Object.keys(exits).filter(exitDirection => {
@@ -37,14 +40,14 @@ function displayExits(exits) {
     });
 
     display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
-};
+}
 
 function displayPlayers(players) {
     var playerIds    = Object.keys(players),
         otherPlayerNames = [];
 
     playerIds.forEach(playerId => {
-        if (players[playerId].userName !== userName) {
+        if (players[playerId].userName !== userInfo.userName) {
             otherPlayerNames.push(players[playerId].userName);
         }
     });
@@ -54,7 +57,7 @@ function displayPlayers(players) {
     } else {
         display(color('You see ' + otherPlayerNames.join(',') + ' already here.'));
     }
-};
+}
 
 function displayItems(items) {
     var itemIds          = Object.keys(items),
@@ -71,7 +74,7 @@ function displayItems(items) {
     } else if (itemIds.length > 2) {
         display('A ' + itemDescriptions.slice(0, -1).join(', ') + ', and a' + itemDescriptions.slice(-1) + ' are on the ground.');
     }
-};
+}
 
 function displayEnemies(enemies) {
     var enemyIds          = Object.keys(enemies),
@@ -88,7 +91,7 @@ function displayEnemies(enemies) {
     } else if (enemyIds.length > 2) {
         display('A ' + enemyDescriptions.slice(0, -1).join(', ') + ', and a' + enemyDescriptions.slice(-1) + ' are congregated here.');
     }
-};
+}
 
 var commands = {
     '/shout': function(message) {
@@ -121,6 +124,85 @@ function display(msg) {
     userInput.prompt(true);
 }
 
+userInput.question('Please enter your name: ', function(name) {
+    connection = io.connect(serverUrl);
+
+    connection.on('connect', function() {
+        connection.emit('login', {name});
+    });
+
+    connection.on('login', function(playerData) {
+        userInfo = playerData;
+
+        var msg = userInfo.userName + ' has joined the game.';
+
+        connection.emit('send', {
+            type   : 'notice',
+            message: msg
+        });
+        connection.emit('playerJoin', {userName: userInfo.userName});
+        userInput.prompt(true);
+    });
+
+    connection.on('enterRoom', function(roomData) {
+        display(color(roomData.description, 'bold+blue'));
+
+        displayExits(roomData.exits);
+        displayPlayers(roomData.players);
+        displayItems(roomData.items);
+        displayEnemies(roomData.enemies);
+    });
+
+    connection.on('roomAction', function(roomData) {
+        if (roomData.userName === userInfo.userName) {
+            if (roomData.reason) {
+                display(color(roomData.reason, 'yellow'));
+            }
+        } else {
+            if (roomData.userName) {
+                var entryMessage = roomData.userName + ' has ' + roomData.action + ' the room.';
+                display(color(entryMessage, 'yellow'))
+            } else {
+                display(color(roomData.userName + ' can\'t leave! ' + roomData.reason, 'yellow'));
+            }
+        }
+    });
+
+    connection.on('lookData', function(exits) {
+        var visibleExits = Object.keys(exits).filter(exitDirection => {
+            return !!exits[exitDirection].connectedRoom;
+        });
+
+        display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
+    });
+
+    connection.on('getItem', function(getData) {
+        getData.gotItems.forEach(item => {
+            display('You picked up a ' + item.title);
+        });
+    });
+
+    connection.on('message', function (data) {
+        var leader;
+
+        if (data.type == 'chat' && data.name) {
+            leader = color(data.name+' shouts ', 'green');
+            display(leader + data.message);
+        } else if (data.type == 'localChat' && data.name) {
+            leader = color('<' + data.name+'> ', 'green');
+            display(leader + data.message);
+        }  else if (data.type == 'notice') {
+            display(color(data.message, 'cyan'));
+        }
+    });
+
+    connection.on('disconnect', function() {
+        display(color('UH OH! You\'ve been disconnected...', 'red'));
+        userInput.close();
+        process.exit(0);
+    });
+});
+
 userInput.on('line', function(line) {
     var trimmedLine = line.trim();
     var splitInput = trimmedLine.split(' ');
@@ -130,76 +212,4 @@ userInput.on('line', function(line) {
     } else if (actions[splitInput[0]]){
         actions[splitInput[0]](splitInput.slice(1).join(' '));
     }
-});
-
-connection.on('connect', function() {
-    userInput.question('Please enter your name: ', function(name) {
-        var msg = name + ' has joined the game.';
-
-        userName = name;
-        connection.emit('send', {
-            type   : 'notice',
-            message: msg
-        });
-        connection.emit('playerJoin', {userName});
-        userInput.prompt(true);
-    });
-});
-
-connection.on('enterRoom', function(roomData) {
-    display(color(roomData.description, 'bold+blue'));
-
-    displayExits(roomData.exits);
-    displayPlayers(roomData.players);
-    displayItems(roomData.items);
-    displayEnemies(roomData.enemies);
-});
-
-connection.on('roomAction', function(roomData) {
-    if (roomData.userName === userName) {
-        if (roomData.reason) {
-            display(color(roomData.reason, 'yellow'));
-        }
-    } else {
-        if (roomData.userName) {
-            var entryMessage = roomData.userName + ' has ' + roomData.action + ' the room.';
-            display(color(entryMessage, 'yellow'))
-        } else {
-            display(color(roomData.userName + ' can\'t leave! ' + roomData.reason, 'yellow'));
-        }
-    }
-});
-
-connection.on('lookData', function(exits) {
-    var visibleExits = Object.keys(exits).filter(exitDirection => {
-        return !!exits[exitDirection].connectedRoom;
-    });
-
-    display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
-});
-
-connection.on('getItem', function(getData) {
-    getData.gotItems.forEach(item => {
-        display('You picked up a ' + item.title);
-    });
-});
-
-connection.on('message', function (data) {
-    var leader;
-
-    if (data.type == 'chat' && data.name) {
-        leader = color(data.name+' shouts ', 'green');
-        display(leader + data.message);
-    } else if (data.type == 'localChat' && data.name) {
-        leader = color('<' + data.name+'> ', 'green');
-        display(leader + data.message);
-    }  else if (data.type == 'notice') {
-        display(color(data.message, 'cyan'));
-    }
-});
-
-connection.on('disconnect', function() {
-    display(color('UH OH! You\'ve been disconnected...', 'red'));
-    userInput.close();
-    process.exit(0);
 });

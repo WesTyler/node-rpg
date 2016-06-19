@@ -13,14 +13,19 @@ var numberOfRooms = Math.round(Math.random() * 50),
 
 io.on('connection', function(socket) {
     var playerId          = uuid.v4(),
-        userName          = 'A player',
         connectionContext = {
             playerId: playerId,
-            player  : new Player(playerId, userName),
+            player  : null,
             rooms   : this.rooms
         };
 
     connections[playerId] = socket;
+
+    connections[playerId].on('login', function(credentials) {
+        this.player = new Player(this.playerId, credentials.name);
+
+        connections[playerId].emit('login', this.player);
+    }.bind(connectionContext));
 
     connections[playerId].on('send', function(data) {
         if (data.type === 'chat' || data.type === 'notice') {
@@ -80,12 +85,11 @@ io.on('connection', function(socket) {
         }
     }.bind(connectionContext));
 
-    connections[playerId].on('playerJoin', function(data) {
-        var rooms = this.rooms;
-        this.player.userName = data.userName;
-        var roomNames = Object.keys(rooms);
-        var randomRoomIndex = helpers.randomIntegerBetween(roomNames.length-1);
-        var randomRoomName = roomNames[randomRoomIndex];
+    connections[playerId].on('playerJoin', function() {
+        var rooms           = this.rooms,
+            roomNames       = Object.keys(rooms),
+            randomRoomIndex = helpers.randomIntegerBetween(roomNames.length-1),
+            randomRoomName  = roomNames[randomRoomIndex];
 
         var player = this.player;
         rooms[randomRoomName].players[player.id] = player;
