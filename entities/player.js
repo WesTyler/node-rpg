@@ -9,6 +9,7 @@ function Player(id, name) {
     this.currentRoom = null;
     this.hp = 1;
     this.mp = 1;
+    this.items = {};
     this.movePoints = 10;
 };
 

@@ -24,6 +24,13 @@ function look() {
     });
 };
 
+function get(itemTitle) {
+    connection.emit('action', {
+        type     : 'get',
+        itemTitle: itemTitle
+    });
+};
+
 function displayExits(exits) {
     var visibleExits = Object.keys(exits).filter(exitDirection => {
         return !!exits[exitDirection].connectedRoom;
@@ -99,11 +106,12 @@ var commands = {
 };
 
 var actions = {
-    'N'   : move,
-    'S'   : move,
-    'E'   : move,
-    'W'   : move,
-    'look': look
+    N   : move.bind(null, 'N'),
+    S   : move.bind(null, 'S'),
+    E   : move.bind(null, 'E'),
+    W   : move.bind(null, 'W'),
+    look: look,
+    get : get
 };
 
 function display(msg) {
@@ -120,7 +128,7 @@ userInput.on('line', function(line) {
     if (trimmedLine[0] === '/') {
         commands[splitInput[0]](splitInput.slice(1).join(' '));
     } else if (actions[splitInput[0]]){
-        actions[splitInput[0]](splitInput[0]);
+        actions[splitInput[0]](splitInput.slice(1).join(' '));
     }
 });
 
@@ -149,7 +157,7 @@ connection.on('enterRoom', function(roomData) {
 
 connection.on('roomAction', function(roomData) {
     if (roomData.userName === userName) {
-        if (roomData.failure) {
+        if (roomData.reason) {
             display(color(roomData.reason, 'yellow'));
         }
     } else {
@@ -170,6 +178,12 @@ connection.on('lookData', function(exits) {
     display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
 });
 
+connection.on('getItem', function(getData) {
+    getData.gotItems.forEach(item => {
+        display('You picked up a ' + item.title);
+    });
+});
+
 connection.on('message', function (data) {
     var leader;
 
@@ -180,11 +194,6 @@ connection.on('message', function (data) {
         leader = color('<' + data.name+'> ', 'green');
         display(leader + data.message);
     }  else if (data.type == 'notice') {
-        display(color(data.message, 'cyan'));
-    } else if (data.type == 'tell' && data.to == nick) {
-        leader = color('['+data.from+'->'+data.to+']', 'red');
-        display(leader + data.message);
-    } else if (data.type == 'emote') {
         display(color(data.message, 'cyan'));
     }
 });

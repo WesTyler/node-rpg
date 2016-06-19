@@ -7,7 +7,7 @@ var uuid          = require('uuid'),
     entities      = require('./entities'),
     Player        = entities.player;
 
-var numberOfRooms = Math.round(Math.random() * 10),
+var numberOfRooms = Math.round(Math.random() * 50),
     rooms         = roomGenerator(numberOfRooms),
     compass       = {'N': 'N', 'S': 'S', 'E': 'E', 'W': 'W'},
     connections   = {};
@@ -32,6 +32,8 @@ io.on('connection', function(socket) {
     }.bind(connectionContext));
 
     connections[playerId].on('action', function(data) {
+        var self = this;
+
         if (data.type === 'move') {
             var movement = this.player.move(data.direction, rooms);
             if (movement.success) {
@@ -58,6 +60,22 @@ io.on('connection', function(socket) {
             }
         } else if (data.type === 'look') {
             connections[playerId].emit('lookData', this.rooms[this.player.currentRoom].exits);
+        } else if (data.type === 'get') {
+            var items    = rooms[this.player.currentRoom].items,
+                gotItems = [];
+
+            Object.keys(items).forEach(itemId => {
+                if (items[itemId].title === data.itemTitle) {
+                    self.player.items[itemId] = items[itemId];
+                    gotItems.push(items[itemId]);
+
+                    delete items[itemId];
+                }
+            });
+
+            if (gotItems.length) {
+                connections[this.player.id].emit('getItem', {gotItems});
+            }
         }
     }.bind(connectionContext));
 
