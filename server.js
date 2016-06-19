@@ -9,7 +9,6 @@ var uuid          = require('uuid'),
 
 var numberOfRooms = Math.round(Math.random() * 50),
     rooms         = roomGenerator(numberOfRooms),
-    compass       = {'N': 'N', 'S': 'S', 'E': 'E', 'W': 'W'},
     connections   = {};
 
 io.on('connection', function(socket) {
@@ -58,9 +57,11 @@ io.on('connection', function(socket) {
             } else {
                 io.in(this.player.currentRoom).emit('roomAction', movement.failure);
             }
-        } else if (data.type === 'look') {
+        }
+        else if (data.type === 'look') {
             connections[playerId].emit('lookData', this.rooms[this.player.currentRoom].exits);
-        } else if (data.type === 'get') {
+        }
+        else if (data.type === 'get') {
             var items    = rooms[this.player.currentRoom].items,
                 gotItems = [];
 

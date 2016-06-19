@@ -7,10 +7,17 @@ function Player(id, name) {
     this.id = id || uuid.v4();
     this.userName = name;
     this.currentRoom = null;
-    this.hp = 1;
-    this.mp = 1;
-    this.items = {};
+    this.maxHp = 5;
+    this.maxMp = 5;
+    this.maxMove = 10;
+    this.hp = 5;
+    this.mp = 5;
     this.movePoints = 10;
+    this.items = {};
+
+    setInterval(() => {
+        this.heal();
+    }, 2500);
 };
 
 Player.prototype.move = function (direction, rooms) {
@@ -51,6 +58,20 @@ Player.prototype.move = function (direction, rooms) {
                 reason   : failureReason
             }
         }
+    }
+};
+
+Player.prototype.heal = function() {
+    if (this.hp < this.maxHp) {
+        this.hp += 1;
+    }
+
+    if (this.mp < this.maxMp) {
+        this.mp += 1;
+    }
+
+    if (this.movePoints < this.maxMove) {
+        this.movePoints += 1;
     }
 };
 
