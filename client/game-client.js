@@ -14,6 +14,13 @@ var userInput  = readline.createInterface(process.stdin, process.stdout),
 // TO DO:
 // userInput.setPrompt('Room [hp: 5 mp: 5 move: 10] > ');
 
+function display(msg) {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    console.log(msg);
+    userInput.prompt(true);
+}
+
 function move(direction) {
     connection.emit('action', {
         type: 'move',
@@ -93,6 +100,15 @@ function displayEnemies(enemies) {
     }
 }
 
+function displayRoom(roomData) {
+    display(color(roomData.description, 'bold+blue'));
+
+    displayExits(roomData.exits);
+    displayPlayers(roomData.players);
+    displayItems(roomData.items);
+    displayEnemies(roomData.enemies);
+}
+
 var commands = {
     '/shout': function(message) {
         var data = { type: 'chat', message: message, name: userInfo.userName };
@@ -117,13 +133,6 @@ var actions = {
     get : get
 };
 
-function display(msg) {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
-    console.log(msg);
-    userInput.prompt(true);
-}
-
 userInput.question('Please enter your name: ', function(name) {
     connection = io.connect(serverUrl);
 
@@ -144,14 +153,7 @@ userInput.question('Please enter your name: ', function(name) {
         userInput.prompt(true);
     });
 
-    connection.on('enterRoom', function(roomData) {
-        display(color(roomData.description, 'bold+blue'));
-
-        displayExits(roomData.exits);
-        displayPlayers(roomData.players);
-        displayItems(roomData.items);
-        displayEnemies(roomData.enemies);
-    });
+    connection.on('enterRoom', displayRoom);
 
     connection.on('roomAction', function(roomData) {
         if (roomData.userName === userInfo.userName) {
@@ -168,14 +170,7 @@ userInput.question('Please enter your name: ', function(name) {
         }
     });
 
-    connection.on('lookData', function(roomData) {
-        display(color(roomData.description, 'bold+blue'));
-
-        displayExits(roomData.exits);
-        displayPlayers(roomData.players);
-        displayItems(roomData.items);
-        displayEnemies(roomData.enemies);
-    });
+    connection.on('lookData', displayRoom);
 
     connection.on('getItem', function(getData) {
         getData.gotItems.forEach(item => {

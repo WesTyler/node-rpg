@@ -1,7 +1,7 @@
 'use strict';
 
 var uuid    = require('uuid'),
-    helpers = require('../helpers');
+    helpers = require('../helpers/index');
 
 function Player(id, name) {
     this.id = id || uuid.v4();
