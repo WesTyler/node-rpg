@@ -211,5 +211,8 @@ userInput.on('line', function(line) {
         commands[splitInput[0]](splitInput.slice(1).join(' '));
     } else if (actions[splitInput[0]]){
         actions[splitInput[0]](splitInput.slice(1).join(' '));
+    } else {
+        display('Uh oh! That command is not recognized. Try again.');
+        userInput.prompt(true);
     }
 });

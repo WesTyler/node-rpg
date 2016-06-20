@@ -2,13 +2,12 @@
 
 var uuid          = require('uuid'),
     io            = require('socket.io')(8000),
-    roomGenerator = require('./roomGenerator'),
     helpers       = require('./helpers'),
     entities      = require('./entities'),
     Player        = entities.player;
 
 var numberOfRooms = Math.round(Math.random() * 50),
-    rooms         = roomGenerator(numberOfRooms),
+    rooms         = helpers.roomGenerator(numberOfRooms),
     connections   = {};
 
 io.on('connection', function(socket) {

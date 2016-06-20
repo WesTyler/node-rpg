@@ -1,8 +1,8 @@
 'use strict';
 
 var uuid     = require('uuid'),
-    entities = require('./entities'),
-    helpers  = require('./helpers');
+    entities = require('./../entities/index'),
+    helpers  = require('./index');
 
 var Room  = entities.room;
 
