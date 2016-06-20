@@ -4,10 +4,11 @@ var uuid          = require('uuid'),
     io            = require('socket.io')(8000),
     helpers       = require('./helpers'),
     entities      = require('./entities'),
+    roomGenerator = require('./roomGenerator'),
     Player        = entities.player;
 
 var numberOfRooms = Math.round(Math.random() * 50),
-    rooms         = helpers.roomGenerator(numberOfRooms),
+    rooms         = roomGenerator(numberOfRooms),
     connections   = {};
 
 io.on('connection', function(socket) {
@@ -63,7 +64,7 @@ io.on('connection', function(socket) {
             }
         }
         else if (data.type === 'look') {
-            connections[playerId].emit('lookData', this.rooms[this.player.currentRoom].exits);
+            connections[playerId].emit('lookData', this.rooms[this.player.currentRoom]);
         }
         else if (data.type === 'get') {
             var items    = rooms[this.player.currentRoom].items,

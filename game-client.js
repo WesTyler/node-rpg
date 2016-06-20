@@ -168,12 +168,13 @@ userInput.question('Please enter your name: ', function(name) {
         }
     });
 
-    connection.on('lookData', function(exits) {
-        var visibleExits = Object.keys(exits).filter(exitDirection => {
-            return !!exits[exitDirection].connectedRoom;
-        });
+    connection.on('lookData', function(roomData) {
+        display(color(roomData.description, 'bold+blue'));
 
-        display(color('You see exits to the: ' + visibleExits.join(','), 'blue'));
+        displayExits(roomData.exits);
+        displayPlayers(roomData.players);
+        displayItems(roomData.items);
+        displayEnemies(roomData.enemies);
     });
 
     connection.on('getItem', function(getData) {

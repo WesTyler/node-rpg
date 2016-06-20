@@ -2,6 +2,6 @@
 
 module.exports = {
     randomIntegerBetween: require('./randomIntegerBetween'),
-    roomGenerator       : require('./roomGenerator'),
+    //roomGenerator       : require('./roomGenerator'),
     antiCompass         : require('./antiCompass')
 };
