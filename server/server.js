@@ -91,6 +91,10 @@ io.on('connection', function(socket) {
                 });
 
                 lookData = availableLookTargets[data.target] || {description: 'You don\'t see ' + data.target + ' here.'};
+
+                if (data.target === 'self' || data.target === this.player.userName) {
+                    lookData = {description: this.player.selfDescription};
+                }
             } else {
                 lookData = self.rooms[self.player.currentRoom]
             }
