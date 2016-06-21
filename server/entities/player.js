@@ -14,6 +14,7 @@ function Player(id, name) {
     this.mp = 5;
     this.movePoints = 10;
     this.items = {};
+    this.description = 'Just a person. Nothing much to see here.';
 
     setInterval(() => {
         this.heal();

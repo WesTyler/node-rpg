@@ -28,10 +28,16 @@ function move(direction) {
     })
 }
 
-function look() {
-    connection.emit('action', {
+function look(target) {
+    var lookData = {
         type: 'look'
-    });
+    };
+
+    if (target) {
+        lookData.target = target;
+    }
+
+    connection.emit('action', lookData);
 }
 
 function get(itemTitle) {
@@ -109,6 +115,14 @@ function displayRoom(roomData) {
     displayEnemies(roomData.enemies);
 }
 
+function displayLook(lookData) {
+    if (lookData.players) {
+        displayRoom(lookData);
+    } else {
+        display(lookData.description);
+    }
+};
+
 var commands = {
     '/shout': function(message) {
         var data = { type: 'chat', message: message, name: userInfo.userName };
@@ -170,7 +184,7 @@ userInput.question('Please enter your name: ', function(name) {
         }
     });
 
-    connection.on('lookData', displayRoom);
+    connection.on('lookData', displayLook);
 
     connection.on('getItem', function(getData) {
         getData.gotItems.forEach(item => {

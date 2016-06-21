@@ -64,7 +64,38 @@ io.on('connection', function(socket) {
             }
         }
         else if (data.type === 'look') {
-            connections[playerId].emit('lookData', this.rooms[this.player.currentRoom]);
+            var lookData;
+
+            if (data.target) {
+                var availableLookTargets = {};
+
+                Object.keys(this.rooms[self.player.currentRoom].players).forEach(playerId => {
+                    var player = self.rooms[self.player.currentRoom].players[playerId];
+                    var name = player.userName;
+
+                    availableLookTargets[name] = player;
+                });
+
+                Object.keys(self.rooms[self.player.currentRoom].enemies).forEach(enemyId => {
+                    var enemy = self.rooms[self.player.currentRoom].enemies[enemyId];
+                    var name = enemy.title;
+
+                    availableLookTargets[name] = enemy;
+                });
+
+                Object.keys(self.rooms[self.player.currentRoom].items).forEach(itemId => {
+                    var item = self.rooms[self.player.currentRoom].items[itemId];
+                    var name = item.title;
+
+                    availableLookTargets[name] = item;
+                });
+
+                lookData = availableLookTargets[data.target] || {description: 'You don\'t see ' + data.target + ' here.'};
+            } else {
+                lookData = self.rooms[self.player.currentRoom]
+            }
+
+            connections[playerId].emit('lookData', lookData);
         }
         else if (data.type === 'get') {
             var items    = rooms[this.player.currentRoom].items,
